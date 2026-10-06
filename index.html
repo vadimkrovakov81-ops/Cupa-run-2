@@ -1,0 +1,271 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<title>Цып-Цып — бег</title>
+<style>
+:root{--sky:#bfe8ff;--road:#3f4650;--yellow:#ffd84d;--ink:#18212b;--green:#4caf70}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;min-height:100%;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#10151b;color:#fff;overflow:hidden}
+body{touch-action:none}
+#app{position:relative;width:100%;height:100dvh;min-height:560px;overflow:hidden;background:linear-gradient(#8ed6ff 0 58%,#7fc66b 58% 66%,#3f4650 66% 100%)}
+#menu{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:22px;z-index:20;background:linear-gradient(#10283bd9,#0c1118ee)}
+.panel{width:min(430px,94vw);background:#fff;color:#18212b;border-radius:28px;padding:26px 20px;text-align:center;box-shadow:0 18px 50px #0008}
+.chickLogo{font-size:76px;line-height:1;margin:4px 0 10px}
+h1{margin:0 0 8px;font-size:32px}
+p{margin:8px 0 18px;color:#53606b;line-height:1.4}
+button{font:inherit;border:0;cursor:pointer}
+.menuBtn{display:block;width:100%;padding:15px 18px;margin:10px 0;border-radius:18px;font-weight:900;font-size:19px}
+.play{background:var(--yellow);color:#241e10;box-shadow:0 5px 0 #d8ae24}
+.music{background:#eef4f8;color:#26313b}
+#hud{position:absolute;top:0;left:0;right:0;z-index:8;padding:max(10px,env(safe-area-inset-top)) 14px 0;display:flex;justify-content:space-between;pointer-events:none}
+.badge{background:#101820c9;padding:8px 12px;border-radius:15px;font-weight:800;font-size:15px}
+#game{position:absolute;inset:0}
+#world{position:absolute;inset:0;overflow:hidden}
+.cloud{position:absolute;width:110px;height:35px;background:#fff9;border-radius:50px;filter:blur(.2px)}
+.cloud:before,.cloud:after{content:"";position:absolute;background:#fff9;border-radius:50%}
+.cloud:before{width:48px;height:48px;left:20px;top:-22px}.cloud:after{width:58px;height:58px;right:15px;top:-30px}
+#road{position:absolute;left:0;right:0;bottom:0;height:34%;background:#3f4650}
+#road:before{content:"";position:absolute;left:0;right:0;top:50%;height:7px;background:repeating-linear-gradient(90deg,#f7f4df 0 58px,transparent 58px 110px);opacity:.8}
+#player{position:absolute;left:15%;bottom:34%;width:74px;height:100px;z-index:5;transition:height .08s}
+.chick{position:absolute;left:8px;bottom:0;width:58px;height:78px;background:#ffd84d;border-radius:50% 50% 45% 45%;border:3px solid #c99325}
+.chick:before{content:"";position:absolute;width:37px;height:37px;right:-13px;top:-12px;background:#ffe66d;border-radius:50%;border:3px solid #c99325}
+.eye{position:absolute;right:3px;top:1px;width:6px;height:6px;border-radius:50%;background:#20252a;z-index:2}
+.beak{position:absolute;right:-26px;top:12px;border-left:25px solid #ef9a32;border-top:10px solid transparent;border-bottom:10px solid transparent;z-index:2}
+.wing{position:absolute;left:-7px;top:30px;width:28px;height:36px;background:#f0bf35;border-radius:50%;transform:rotate(25deg)}
+.leg{position:absolute;bottom:-17px;width:6px;height:21px;background:#e59b31;border-radius:4px}
+.leg.l{left:18px}.leg.r{left:39px}
+#player.jump{animation:none;transform:translateY(-135px)}
+#player.duck{height:55px}.duck .chick{transform:scaleY(.63);transform-origin:bottom}
+.obstacle{position:absolute;z-index:4}
+.car{width:105px;height:52px;background:#e95754;border-radius:13px 13px 7px 7px;border:3px solid #a72f2f}
+.car:before{content:"";position:absolute;left:17px;top:-25px;width:58px;height:28px;background:#68aee8;border:3px solid #a72f2f;border-bottom:0;border-radius:12px 12px 0 0}
+.wheel{position:absolute;bottom:-15px;width:25px;height:25px;background:#20252b;border-radius:50%;border:5px solid #aaa}
+.w1{left:13px}.w2{right:13px}
+.light{width:58px;height:115px;background:#343b43;border-radius:12px;border:4px solid #20252b}
+.light:before{content:"";position:absolute;left:14px;top:10px;width:22px;height:22px;background:#ef6b68;border-radius:50%;box-shadow:0 35px #ffd84d,0 70px #72c78a}
+.bar{position:absolute;right:-75px;top:-8px;width:110px;height:9px;background:#ef6b68;border-radius:5px}
+#controls{position:absolute;z-index:10;left:0;right:0;bottom:max(12px,env(safe-area-inset-bottom));display:flex;gap:12px;padding:0 14px}
+.ctrl{flex:1;min-height:62px;border-radius:20px;background:#ffffffed;color:#18212b;font-size:20px;font-weight:900;box-shadow:0 5px 0 #0004}
+.ctrl:active{transform:translateY(3px);box-shadow:0 2px 0 #0004}
+#message{position:absolute;z-index:12;left:50%;top:22%;transform:translateX(-50%);background:#101820dd;border-radius:18px;padding:12px 18px;font-weight:900;opacity:0;transition:.2s;pointer-events:none;white-space:nowrap}
+#gameOver{position:absolute;inset:0;z-index:18;display:none;align-items:center;justify-content:center;padding:22px;background:#071019cc}
+.over{width:min(410px,94vw);background:#fff;color:#18212b;border-radius:28px;padding:26px 20px;text-align:center}
+.over h2{font-size:30px;margin:0 0 10px}
+.over button{width:100%;padding:15px;border-radius:18px;background:var(--yellow);font-weight:900;font-size:19px}
+.small{font-size:13px;color:#73808b;margin-top:14px}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="menu">
+    <div class="panel">
+      <div class="chickLogo">🐥</div>
+      <h1>Цып-Цып</h1>
+      <p>Прыгай через машины и пригибайся под светофорами.<br>Скорость постепенно увеличивается.</p>
+      <button class="menuBtn music" id="musicBtn">🎵 Включить песню</button>
+      <button class="menuBtn play" id="startBtn">▶️ Начать игру</button>
+      <div class="small">На iPhone звук можно включить только после нажатия.</div>
+    </div>
+  </div>
+
+  <div id="game">
+    <div id="world">
+      <div class="cloud" style="left:8%;top:16%"></div>
+      <div class="cloud" style="left:58%;top:9%;transform:scale(.8)"></div>
+      <div id="road"></div>
+      <div id="player">
+        <div class="chick"><span class="eye"></span><span class="beak"></span><span class="wing"></span><i class="leg l"></i><i class="leg r"></i></div>
+      </div>
+    </div>
+    <div id="hud">
+      <div class="badge">⭐ <span id="score">0</span></div>
+      <div class="badge">📏 <span id="distance">0</span> м</div>
+      <div class="badge">⚡ <span id="speed">1.0</span>x</div>
+    </div>
+    <div id="message"></div>
+    <div id="controls">
+      <button class="ctrl" id="jumpBtn">⬆️ ПРЫЖОК</button>
+      <button class="ctrl" id="duckBtn">⬇️ ПРИСЕСТЬ</button>
+    </div>
+  </div>
+
+  <div id="gameOver">
+    <div class="over">
+      <h2>💥 Цыпа остановился!</h2>
+      <p>Ты пробежал <b><span id="finalDistance">0</span> м</b> и набрал <b><span id="finalScore">0</span> очков</b>.</p>
+      <button id="againBtn">🔄 Играть ещё</button>
+    </div>
+  </div>
+
+  <audio id="music" preload="auto" loop playsinline>
+    <source src="assets/chipchip-song.mp3" type="audio/mpeg">
+  </audio>
+</div>
+
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const menu=$('menu'), music=$('music'), musicBtn=$('musicBtn'), startBtn=$('startBtn');
+  const player=$('player'), world=$('world'), scoreEl=$('score'), distEl=$('distance'), speedEl=$('speed');
+  const gameOver=$('gameOver'), finalDistance=$('finalDistance'), finalScore=$('finalScore');
+  const jumpBtn=$('jumpBtn'), duckBtn=$('duckBtn'), againBtn=$('againBtn'), msg=$('message');
+
+  let playing=false, jumping=false, ducking=false, score=0, distance=0;
+  let speed=320, last=0, spawnTimer=0, frame=0, obstacles=[];
+  let musicOn=false, jumpToken=0;
+
+  function showMsg(t){
+    msg.textContent=t; msg.style.opacity='1';
+    clearTimeout(showMsg.t); showMsg.t=setTimeout(()=>msg.style.opacity='0',650);
+  }
+
+  async function toggleMusic(){
+    try{
+      if(music.paused){
+        await music.play();
+        musicOn=true;
+        musicBtn.textContent='🔇 Выключить песню';
+      }else{
+        music.pause();
+        musicOn=false;
+        musicBtn.textContent='🎵 Включить песню';
+      }
+    }catch(e){
+      musicOn=false;
+      showMsg('Нажми ещё раз — Safari разрешит звук');
+    }
+  }
+
+  function stopMusic(){
+    music.pause();
+    music.currentTime=0;
+    musicOn=false;
+    musicBtn.textContent='🎵 Включить песню';
+  }
+
+  function start(){
+    // Важно: вызов play() находится внутри пользовательского нажатия.
+    // Музыка затем сразу останавливается: во время игры её нет.
+    if(musicOn) stopMusic();
+    playing=true; score=0; distance=0; speed=320; spawnTimer=650; last=performance.now();
+    obstacles.forEach(o=>o.el.remove()); obstacles=[];
+    menu.style.display='none'; gameOver.style.display='none';
+    scoreEl.textContent='0'; distEl.textContent='0'; speedEl.textContent='1.0';
+    player.classList.remove('jump','duck'); jumping=false; ducking=false;
+    requestAnimationFrame(loop);
+  }
+
+  function jump(){
+    if(!playing || jumping || ducking) return;
+    jumping=true; jumpToken++;
+    const token=jumpToken;
+    player.classList.add('jump');
+    showMsg('ПРЫЖОК!');
+    setTimeout(()=>{
+      if(token!==jumpToken || !playing) return;
+      player.classList.remove('jump');
+      setTimeout(()=>{if(token===jumpToken) jumping=false},80);
+    },520);
+  }
+
+  function duckStart(){
+    if(!playing || jumping) return;
+    ducking=true; player.classList.add('duck');
+  }
+  function duckEnd(){
+    ducking=false; player.classList.remove('duck');
+  }
+
+  function spawn(){
+    const type=Math.random()<.58?'car':'light';
+    const el=document.createElement('div');
+    el.className='obstacle '+type;
+    if(type==='car'){
+      el.innerHTML='<i class="wheel w1"></i><i class="wheel w2"></i>';
+      el.style.bottom='34%';
+    }else{
+      el.innerHTML='<i class="bar"></i>';
+      el.style.bottom='42%';
+    }
+    el.style.left=world.clientWidth+90+'px';
+    world.appendChild(el);
+    obstacles.push({el,type,x:world.clientWidth+90,w:type==='car'?105:58,h:type==='car'?52:115});
+  }
+
+  function hit(o){
+    const pr=player.getBoundingClientRect(), r=o.el.getBoundingClientRect();
+    const px1=pr.left+12, px2=pr.right-10, py1=pr.top+12, py2=pr.bottom;
+    const ox1=r.left+4, ox2=r.right-4, oy1=r.top+4, oy2=r.bottom-4;
+    return px1<ox2 && px2>ox1 && py1<oy2 && py2>oy1;
+  }
+
+  function end(){
+    playing=false;
+    obstacles.forEach(o=>o.el.remove()); obstacles=[];
+    finalDistance.textContent=Math.floor(distance);
+    finalScore.textContent=score;
+    gameOver.style.display='flex';
+  }
+
+  function loop(now){
+    if(!playing) return;
+    const dt=Math.min(.035,(now-last)/1000); last=now;
+    distance += speed*dt/70;
+    // Спокойный старт, затем постепенное ускорение.
+    speed = Math.min(650, 320 + distance*3.2);
+    distEl.textContent=Math.floor(distance);
+    speedEl.textContent=(speed/320).toFixed(1);
+
+    spawnTimer -= dt*1000;
+    if(spawnTimer<=0){
+      spawn();
+      spawnTimer=Math.max(720, 1450 - distance*2.2 + Math.random()*420);
+    }
+
+    for(let i=obstacles.length-1;i>=0;i--){
+      const o=obstacles[i];
+      o.x -= speed*dt;
+      o.el.style.left=o.x+'px';
+      if(hit(o)){
+        // Машину нужно именно перепрыгнуть; верхний светофор — именно присесть.
+        end(); return;
+      }
+      if(o.x < -150){
+        o.el.remove(); obstacles.splice(i,1);
+        score++; scoreEl.textContent=score;
+      }
+    }
+    frame++;
+    requestAnimationFrame(loop);
+  }
+
+  // Кнопки работают на iPhone через pointerdown, без зависимости от click.
+  jumpBtn.addEventListener('pointerdown', e=>{e.preventDefault();jump()});
+  duckBtn.addEventListener('pointerdown', e=>{e.preventDefault();duckStart()});
+  ['pointerup','pointercancel','pointerleave'].forEach(ev=>duckBtn.addEventListener(ev,e=>{e.preventDefault();duckEnd()}));
+  musicBtn.addEventListener('click',toggleMusic);
+  startBtn.addEventListener('click',start);
+  againBtn.addEventListener('click',start);
+
+  // Свайпы: вверх = прыжок, вниз = присесть.
+  let sy=0;
+  world.addEventListener('touchstart',e=>{if(e.touches[0])sy=e.touches[0].clientY},{passive:true});
+  world.addEventListener('touchend',e=>{
+    if(!playing || !e.changedTouches[0]) return;
+    const dy=e.changedTouches[0].clientY-sy;
+    if(dy<-30) jump();
+    else if(dy>30){duckStart();setTimeout(duckEnd,420);}
+  },{passive:true});
+
+  // Клавиатура для компьютера.
+  addEventListener('keydown',e=>{
+    if(e.code==='Space'||e.code==='ArrowUp') {e.preventDefault();jump()}
+    if(e.code==='ArrowDown') {e.preventDefault();duckStart()}
+  });
+  addEventListener('keyup',e=>{if(e.code==='ArrowDown')duckEnd()});
+})();
+</script>
+</body>
+</html>
